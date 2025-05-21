@@ -17,8 +17,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; 
+    padding-top: 10px;
+}
+
+.nav-buttons-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-grow: 1;
     gap: 20px;
+    width: 100%;
+    margin-top: 80px;
 }
 
 .nav-button {
@@ -129,4 +138,10 @@ body {
     padding: 0.5rem;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.sidebar-logo {
+    width: 70px;
+    margin-bottom: 15px;
+    border-radius: 8px;
 }
