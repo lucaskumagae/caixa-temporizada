@@ -1,9 +1,13 @@
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
 #include <WiFi.h>
 #include <WebServer.h>
 #include "time.h"
+#include "SPIFFS.h"
 
-const char* ssid = "VIVOFIBRA-7AA1";
-const char* password = "Dd13492131";
+const char* ssid = "TP-LINK_0A24";
+const char* password = "96813195";
 
 #define SENSOR_PIN 23
 const int buzzerPin = 19;
@@ -12,95 +16,13 @@ int ultimoEstado = HIGH;
 
 WebServer server(80);
 
-int horarioProgramado = -1;
+struct Medicine {
+  int id;
+  String nome;
+  std::vector<int> horarios; // store alarm times in minutes from midnight
+};
 
-bool alarmeTocando = false;
-bool alarmeDesativadoAposAbrir = false;
-
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = -3 * 3600;
-const int   daylightOffset_sec = 0;
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(SENSOR_PIN, INPUT_PULLUP);
-  pinMode(buzzerPin, OUTPUT);
-
-  WiFi.begin(ssid, password);
-  Serial.print("Conectando WiFi...");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi conectado!");
-  Serial.print("IP: "); Serial.println(WiFi.localIP());
-
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/settime", HTTP_GET, handleSetTime);
-
-  server.begin();
-  Serial.println("Servidor iniciado");
-}
-
-void loop() {
-  server.handleClient();
-
-  int estado = digitalRead(SENSOR_PIN);
-  if (estado != ultimoEstado) {
-    if (estado == LOW) {
-      Serial.println("Caixa fechada!");
-    } else {
-      Serial.println("Caixa aberta!");
-      if (alarmeTocando) {
-        noTone(buzzerPin);
-        alarmeTocando = false;
-        alarmeDesativadoAposAbrir = true;
-        Serial.println("Alarme desativado apos abrir a caixa.");
-      }
-    }
-    ultimoEstado = estado;
-  }
-
-  if (horarioProgramado != -1) {
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
-      int agora = timeinfo.tm_hour * 60 + timeinfo.tm_min;
-
-      if (agora == horarioProgramado && !alarmeDesativadoAposAbrir) {
-        if (estado == LOW && !alarmeTocando) {
-          tone(buzzerPin, 1000);
-          alarmeTocando = true;
-          Serial.println("Alarme tocando.");
-        }
-      } else {
-        if (alarmeTocando) {
-          noTone(buzzerPin);
-          alarmeTocando = false;
-        }
-      }
-    }
-  }
-
-  delay(100);
-}
-
-#include <WiFi.h>
-#include <WebServer.h>
-#include "time.h"
-
-const char* ssid = "VIVOFIBRA-7AA1";
-const char* password = "Dd13492131";
-
-#define SENSOR_PIN 23
-const int buzzerPin = 19;
-
-int ultimoEstado = HIGH;
-
-WebServer server(80);
-
-int horarioProgramado = -1;
+std::vector<Medicine> medicines;
 
 bool alarmeTocando = false;
 bool alarmeDesativadoAposAbrir = false;
@@ -169,27 +91,23 @@ const char* main_html = R"rawliteral(
     </div>
 
     <script>
-        // Simulated data (replace with real data or API calls if available)
-        let remedios = [
-            {id: 1, nome: "Remédio A", horario: "08:00, 20:00"},
-            {id: 2, nome: "Remédio B", horario: "12:00"}
-        ];
+        let medicines = [];
 
-        function renderRemedios() {
+        function renderMedicines() {
             const lista = document.getElementById('lista-remedios');
             lista.innerHTML = '';
-            remedios.forEach(remedio => {
+            medicines.forEach(med => {
                 const div = document.createElement('div');
                 div.className = 'remedio';
-                div.setAttribute('data-id', remedio.id);
-                div.setAttribute('data-nome', remedio.nome);
-                div.setAttribute('data-horario', remedio.horario);
+                div.setAttribute('data-id', med.id);
+                div.setAttribute('data-nome', med.nome);
+                div.setAttribute('data-horario', med.horarios.join(', '));
 
                 div.innerHTML = `
                     <div class="icon-placeholder"></div>
                     <div class="info">
-                        <strong>${remedio.nome}</strong>
-                        <p>Horários: ${remedio.horario}</p>
+                        <strong>${med.nome}</strong>
+                        <p>Horários: ${med.horarios.join(', ')}</p>
                     </div>
                     <button class="editar">Editar</button>
                     <button class="excluir">Excluir</button>
@@ -205,12 +123,11 @@ const char* main_html = R"rawliteral(
                     const remedioDiv = this.closest('.remedio');
                     const id = remedioDiv.getAttribute('data-id');
                     const nome = remedioDiv.getAttribute('data-nome');
-                    const horario = remedioDiv.getAttribute('data-horario');
+                    const horarios = remedioDiv.getAttribute('data-horario').split(',').map(h => h.trim());
 
                     document.getElementById('id-medicamento').value = id;
                     document.getElementById('nome-remedio-editar').value = nome;
-                    const horarioPrimeiro = horario.split(',')[0].trim();
-                    document.getElementById('horario-remedio-editar').value = horarioPrimeiro;
+                    document.getElementById('horario-remedio-editar').value = horarios[0] || '';
 
                     document.getElementById('form-editar-remedio').style.display = 'block';
                 });
@@ -232,8 +149,12 @@ const char* main_html = R"rawliteral(
 
             document.getElementById('confirmar-excluir').addEventListener('click', function() {
                 if (remedioToDeleteId) {
-                    remedios = remedios.filter(r => r.id != remedioToDeleteId);
-                    renderRemedios();
+                    fetch('/medicines/' + remedioToDeleteId, { method: 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            loadMedicines();
+                        }
+                    });
                     remedioToDeleteId = null;
                     document.getElementById('confirm-excluir').style.display = 'none';
                 }
@@ -257,11 +178,17 @@ const char* main_html = R"rawliteral(
             const nome = document.getElementById('nome-remedio').value;
             const horario = document.getElementById('horario-remedio').value;
             if (nome && horario) {
-                const newId = remedios.length ? Math.max(...remedios.map(r => r.id)) + 1 : 1;
-                remedios.push({id: newId, nome: nome, horario: horario});
-                renderRemedios();
-                document.getElementById('form-adicionar-remedio').style.display = 'none';
-                this.reset();
+                fetch('/medicines', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nome, horarios: [horario] })
+                }).then(response => {
+                    if (response.ok) {
+                        loadMedicines();
+                        document.getElementById('form-adicionar-remedio').style.display = 'none';
+                        this.reset();
+                    }
+                });
             }
         });
 
@@ -270,14 +197,28 @@ const char* main_html = R"rawliteral(
             const id = parseInt(document.getElementById('id-medicamento').value);
             const nome = document.getElementById('nome-remedio-editar').value;
             const horario = document.getElementById('horario-remedio-editar').value;
-            const remedio = remedios.find(r => r.id === id);
-            if (remedio && nome && horario) {
-                remedio.nome = nome;
-                remedio.horario = horario;
-                renderRemedios();
-                document.getElementById('form-editar-remedio').style.display = 'none';
+            if (nome && horario) {
+                fetch('/medicines/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: nome, horarios: [horario] })
+                }).then(response => {
+                    if (response.ok) {
+                        loadMedicines();
+                        document.getElementById('form-editar-remedio').style.display = 'none';
+                    }
+                });
             }
         });
+
+        function loadMedicines() {
+            fetch('/medicines')
+                .then(response => response.json())
+                .then(data => {
+                    medicines = data;
+                    renderMedicines();
+                });
+        }
 
         // Load navigation from nav.html
         fetch('nav.html')
@@ -286,8 +227,8 @@ const char* main_html = R"rawliteral(
                 document.getElementById('nav-placeholder').innerHTML = data;
             });
 
-        // Initial render
-        renderRemedios();
+        // Initial load
+        loadMedicines();
     </script>
 </body>
 </html>
@@ -333,6 +274,12 @@ void setup() {
   pinMode(SENSOR_PIN, INPUT_PULLUP);
   pinMode(buzzerPin, OUTPUT);
 
+  if (!SPIFFS.begin(true)) {
+    Serial.println("Erro ao montar SPIFFS");
+  } else {
+    Serial.println("SPIFFS montado com sucesso");
+  }
+
   WiFi.begin(ssid, password);
   Serial.print("Conectando WiFi...");
   while (WiFi.status() != WL_CONNECTED) {
@@ -366,7 +313,118 @@ void setup() {
     file.close();
   });
 
-  server.on("/settime", HTTP_GET, handleSetTime);
+  // API endpoints for medicines
+  server.on("/medicines", HTTP_GET, []() {
+    DynamicJsonDocument doc(1024);
+    JsonArray arr = doc.to<JsonArray>();
+    for (auto &med : medicines) {
+      JsonObject obj = arr.createNestedObject();
+      obj["id"] = med.id;
+      obj["nome"] = med.nome;
+      JsonArray horariosArr = obj.createNestedArray("horarios");
+      for (int h : med.horarios) {
+        int hh = h / 60;
+        int mm = h % 60;
+        char buf[6];
+        snprintf(buf, sizeof(buf), "%02d:%02d", hh, mm);
+        horariosArr.add(String(buf));
+      }
+    }
+    String response;
+    serializeJson(doc, response);
+    server.send(200, "application/json", response);
+  });
+
+  server.on("/medicines", HTTP_POST, []() {
+    if (server.hasArg("plain") == false) {
+      server.send(400, "text/plain", "Body not received");
+      return;
+    }
+    String body = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, body);
+    if (error) {
+      server.send(400, "text/plain", "Invalid JSON");
+      return;
+    }
+    String nome = doc["nome"];
+    JsonArray horariosArr = doc["horarios"].as<JsonArray>();
+    std::vector<int> horariosVec;
+    for (JsonVariant v : horariosArr) {
+      String t = v.as<String>();
+      int hh = t.substring(0, 2).toInt();
+      int mm = t.substring(3, 5).toInt();
+      horariosVec.push_back(hh * 60 + mm);
+    }
+    int newId = medicines.empty() ? 1 : medicines.back().id + 1;
+    medicines.push_back({newId, nome, horariosVec});
+    server.send(200, "text/plain", "Medicine added");
+  });
+
+  server.on("/medicines", HTTP_OPTIONS, []() {
+    server.send(200);
+  });
+
+  server.on("/medicines/", HTTP_DELETE, []() {
+    // This will not be called because path is /medicines/:id, so we handle below
+    server.send(400, "text/plain", "ID not specified");
+  });
+
+  server.on("/medicines/", HTTP_PUT, []() {
+    // This will not be called because path is /medicines/:id, so we handle below
+    server.send(400, "text/plain", "ID not specified");
+  });
+
+  // Handle dynamic routes for PUT and DELETE with ID
+  server.onNotFound([]() {
+    String uri = server.uri();
+    if (uri.startsWith("/medicines/")) {
+      String idStr = uri.substring(strlen("/medicines/"));
+      int id = idStr.toInt();
+      if (server.method() == HTTP_DELETE) {
+        auto it = std::find_if(medicines.begin(), medicines.end(), [id](const Medicine& m) { return m.id == id; });
+        if (it != medicines.end()) {
+          medicines.erase(it);
+          server.send(200, "text/plain", "Medicine deleted");
+        } else {
+          server.send(404, "text/plain", "Medicine not found");
+        }
+      } else if (server.method() == HTTP_PUT) {
+        if (server.hasArg("plain") == false) {
+          server.send(400, "text/plain", "Body not received");
+          return;
+        }
+        String body = server.arg("plain");
+        DynamicJsonDocument doc(512);
+        DeserializationError error = deserializeJson(doc, body);
+        if (error) {
+          server.send(400, "text/plain", "Invalid JSON");
+          return;
+        }
+        String nome = doc["nome"];
+        JsonArray horariosArr = doc["horarios"].as<JsonArray>();
+        std::vector<int> horariosVec;
+        for (JsonVariant v : horariosArr) {
+          String t = v.as<String>();
+          int hh = t.substring(0, 2).toInt();
+          int mm = t.substring(3, 5).toInt();
+          horariosVec.push_back(hh * 60 + mm);
+        }
+        auto it = std::find_if(medicines.begin(), medicines.end(), [id](const Medicine& m) { return m.id == id; });
+        if (it != medicines.end()) {
+          it->nome = nome;
+          it->horarios = horariosVec;
+          server.send(200, "text/plain", "Medicine updated");
+        } else {
+          server.send(404, "text/plain", "Medicine not found");
+        }
+      } else {
+        server.send(405, "text/plain", "Method not allowed");
+      }
+    } else {
+      server.send(404, "text/plain", "Not found");
+    }
+  });
 
   server.begin();
   Serial.println("Servidor iniciado");
@@ -391,69 +449,32 @@ void loop() {
     ultimoEstado = estado;
   }
 
-  if (horarioProgramado != -1) {
+  if (!medicines.empty()) {
     struct tm timeinfo;
     if (getLocalTime(&timeinfo)) {
       int agora = timeinfo.tm_hour * 60 + timeinfo.tm_min;
 
-      if (agora == horarioProgramado && !alarmeDesativadoAposAbrir) {
-        if (estado == LOW && !alarmeTocando) {
-          tone(buzzerPin, 1000);
-          alarmeTocando = true;
-          Serial.println("Alarme tocando.");
+      bool alarmTriggered = false;
+      for (const auto& med : medicines) {
+        for (int h : med.horarios) {
+          if (agora == h && !alarmeDesativadoAposAbrir) {
+            if (estado == LOW && !alarmeTocando) {
+              tone(buzzerPin, 1000);
+              alarmeTocando = true;
+              Serial.println("Alarme tocando.");
+              alarmTriggered = true;
+              break;
+            }
+          }
         }
-      } else {
-        if (alarmeTocando) {
-          noTone(buzzerPin);
-          alarmeTocando = false;
-        }
+        if (alarmTriggered) break;
+      }
+      if (!alarmTriggered && alarmeTocando) {
+        noTone(buzzerPin);
+        alarmeTocando = false;
       }
     }
   }
 
   delay(100);
-}
-
-void handleSetTime() {
-  if (server.hasArg("alarmtime")) {
-    String t = server.arg("alarmtime");
-    int hh = t.substring(0, 2).toInt();
-    int mm = t.substring(3, 5).toInt();
-    horarioProgramado = hh * 60 + mm;
-
-    alarmeDesativadoAposAbrir = false;
-    alarmeTocando = false;
-
-    Serial.printf("Horario programado: %02d:%02d\n", hh, mm);
-
-    String page = "<html><body>";
-    page += "<h1>Horario salvo: " + t + "</h1>";
-    page += "<a href=\"/\">Voltar</a>";
-    page += "</body></html>";
-    server.send(200, "text/html", page);
-  } else {
-    server.send(400, "text/plain", "Horario nao informado");
-  }
-}
-
-void handleSetTime() {
-  if (server.hasArg("alarmtime")) {
-    String t = server.arg("alarmtime");
-    int hh = t.substring(0, 2).toInt();
-    int mm = t.substring(3, 5).toInt();
-    horarioProgramado = hh * 60 + mm;
-
-    alarmeDesativadoAposAbrir = false;
-    alarmeTocando = false;
-
-    Serial.printf("Horario programado: %02d:%02d\n", hh, mm);
-
-    String page = "<html><body>";
-    page += "<h1>Horario salvo: " + t + "</h1>";
-    page += "<a href=\"/\">Voltar</a>";
-    page += "</body></html>";
-    server.send(200, "text/html", page);
-  } else {
-    server.send(400, "text/plain", "Horario nao informado");
-  }
 }
