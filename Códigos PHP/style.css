@@ -1,0 +1,172 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    background-color: #f5f5f5;
+}
+
+.sidebar {
+    width: 80px;
+    height: 100vh;
+    background-color: #2c3e50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.nav-buttons-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-grow: 1;
+    gap: 20px;
+    width: 100%;
+    margin-top: 80px;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    color: #ecf0f1; 
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    padding: 10px 0;
+    text-decoration: none; /* Remove underline */
+}
+
+.nav-button i {
+    font-size: 24px;
+    background-color: #34495e; 
+    color: #ecf0f1; 
+    border-radius: 50%;
+    padding: 10px;
+    margin-bottom: 5px;
+}
+
+.nav-button span {
+    font-size: 12px;
+    display: block;
+}
+
+.nav-button:hover {
+    background-color: #5dade2;
+    border-radius: 10px;
+    color: #fff;
+}
+
+.menu-btn,
+.add-btn {
+    background: #fff;
+    border: none;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.menu a {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    margin: 1rem 0;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.header {
+    background: linear-gradient(to right, #ccc, #999);
+    padding: 1rem;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.header h1 {
+    font-size: 2rem;
+}
+
+.add-remedio {
+    background: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.lista-remedios {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.remedio {
+    background: #e0f0f0;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.icon-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #ccc;
+    border-radius: 10px;
+    margin-right: 1rem;
+}
+
+.info {
+    flex: 1;
+}
+
+.editar {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.sidebar-logo {
+    width: 70px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+margin-bottom: 1.5rem;
+}
+
+table thead tr {
+background-color: #34495e;
+color: #ecf0f1;
+}
+
+table th, table td {
+border: 1px solid #ddd;
+padding: 8px;
+text-align: left;
+}
+
+table tbody tr:nth-child(even) {
+background-color: #f2f2f2;
+}
+
+table tbody tr:hover {
+background-color: #d6eaf8;
+}
