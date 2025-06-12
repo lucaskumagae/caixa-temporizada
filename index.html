@@ -1,0 +1,1002 @@
+αdnαn
+Adicionar status
+Não perturbar
+
+Henrique_CSZ — 27/04/2025 18:14
+Imagem
+αdnαn — 27/04/2025 18:18
+https://pucpredu-my.sharepoint.com/:p:/r/personal/adnan_charif_pucpr_edu_br/Documents/Apresentação.pptx?d=wcab57eadf6b54fec8b2f93c85c45dbd4&csf=1&web=1&e=R5tqbo
+αdnαn — 27/04/2025 18:25
+.
+αdnαn — 27/04/2025 19:53
+aqui e bom tirar essas data e deixar mais humano
+Imagem
+e aqui precisa terminar o texto
+Imagem
+Henrique_CSZ — 28/04/2025 18:33
+https://pucpredu-my.sharepoint.com/:w:/g/personal/sergio_pizzatto_pucpr_edu_br/EeYvySKgTp5PvSdpQSQFnr4BQ4S_vgdL6dKUoECr3_AK7Q?e=TaKm2b
+kuma — 28/04/2025 18:44
+Imagem
+αdnαn — 28/04/2025 19:05
+Tipo de arquivo em anexo: acrobat
+AHLS_CaixaTemporizadaDeRemédios.pdf
+238.37 KB
+αdnαn — 29/04/2025 10:08
+🎯 Modelo Lógico do Banco de Dados (Entidades e Relacionamentos)
+Usuário (opcional, se houver controle por perfil)
+
+Campo    Tipo    Descrição
+id_usuario    INT (PK)    Identificador do usuário
+nome    VARCHAR    Nome do usuário
+email    VARCHAR    Email do usuário (opcional)
+Medicamento
+
+Campo    Tipo    Descrição
+id_medicamento    INT (PK)    Identificador do medicamento
+nome    VARCHAR    Nome do medicamento
+dosagem    VARCHAR    Dosagem (ex: 500mg, 10ml)
+observacoes    TEXT    Instruções adicionais (opcional)
+id_usuario    INT (FK)    Relacionado ao usuário (se aplicável)
+Horario_Medicamento
+
+Campo    Tipo    Descrição
+id_horario    INT (PK)    Identificador do horário
+id_medicamento    INT (FK)    Medicamento relacionado
+horario    TIME    Horário programado para tomar o remédio
+repetir_diariamente    BOOLEAN    Indica se o horário se repete todo dia
+Log_Abertura_Caixa
+
+Campo    Tipo    Descrição
+id_log    INT (PK)    Identificador do log
+data_hora    DATETIME    Momento da abertura da caixa
+status    VARCHAR    "tomado", "esquecido", "fora_do_horario"
+Configuracao
+
+Campo    Tipo    Descrição
+id_configuracao    INT (PK)    Identificador da configuração
+modo_nao_perturbe    BOOLEAN    Ativa/desativa o modo silencioso
+hora_inicio_np    TIME    Início do modo não perturbe
+hora_fim_np    TIME    Fim do modo não perturbe
+id_usuario    INT (FK)    Relacionado ao usuário (se aplicável)
+CREATE DATABASE IF NOT EXISTS caixa_remedios;
+USE caixa_remedios;
+
+-- Tabela de Usuários (opcional)
+CREATE TABLE usuario (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100)
+);
+
+-- Tabela de Medicamentos
+CREATE TABLE medicamento (
+    id_medicamento INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    dosagem VARCHAR(50),
+    observacoes TEXT,
+    id_usuario INT,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+
+-- Tabela de Horários dos Medicamentos
+CREATE TABLE horario_medicamento (
+    id_horario INT AUTO_INCREMENT PRIMARY KEY,
+    id_medicamento INT NOT NULL,
+    horario TIME NOT NULL,
+    repetir_diariamente BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_medicamento) REFERENCES medicamento(id_medicamento)
+);
+
+-- Tabela de Logs de Abertura da Caixa
+CREATE TABLE log_abertura_caixa (
+    id_log INT AUTO_INCREMENT PRIMARY KEY,
+    data_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('tomado', 'esquecido', 'fora_do_horario') NOT NULL
+);
+
+-- Tabela de Configurações do Usuário
+CREATE TABLE configuracao (
+    id_configuracao INT AUTO_INCREMENT PRIMARY KEY,
+    modo_nao_perturbe BOOLEAN DEFAULT FALSE,
+    hora_inicio_np TIME,
+    hora_fim_np TIME,
+    id_usuario INT,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+αdnαn — 29/04/2025 10:09
+Lógico
+αdnαn — 29/04/2025 10:09
+Físico
+αdnαn — 29/04/2025 10:23
+adicionar email_responsavel e senha no usuario
+Henrique_CSZ — 29/04/2025 18:13
+HenriqueSzlachta
+αdnαn — 29/04/2025 18:23
+Botao novo remedio(nome, horario periodico ou pre estabelecido 1+)
+Botao editar remedio
+Lista de remedios registrados
+Cadastrar/editar email responsavel(opcional)
+Ver log (horarios que foi registrado/editado/excluido remedio, horarios que a caixa apitou, horario que o remedio foi tomado/esquecido)
+cadastrar/editar horario de nao perturbe 
+kuma — 29/04/2025 18:30
+Imagem
+Imagem
+αdnαn — 29/04/2025 18:45
+meus remedios
+log
+configurações
+kuma — 29/04/2025 18:47
+CREATE TABLE remedios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100),
+    horario TIME
+);
+INSERT INTO remedios (nome, horario) VALUES
+('Remédio 1', '18:00:00'),
+('Remédio 2', '18:00:00'),
+('Remédio 3', '18:00:00');
+Arrebatador de Negro — 29/04/2025 18:49
+https://prod.liveshare.vsengsaas.visualstudio.com/join?A87562B2058B9F2C30E41604DA7E1C7A6968
+Visual Studio Code for the Web
+Build with Visual Studio Code, anywhere, anytime, entirely in your browser.
+Tempo
+ acabou de cair de paraquedas no servidor. — 29/04/2025 18:57
+KenaBot
+ chegou. — 29/04/2025 18:59
+KenaBot
+APP
+ — 29/04/2025 18:59
+You are not on a premium server! Due to some internal errors, we are unable to provide service to all servers on KenaBot. Temporarily, it will only work on Premium and Partner servers. We are working to fix the issue as soon as possible. We apologize for the inconvenience. To access these features, purchase it here!
+Arrebatador de Negro — 05/05/2025 19:27
+CREATE DATABASE db_caliburger;
+USE db_caliburger;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+Expandir
+novoDB.txt
+10 KB
+αdnαn — 18/05/2025 17:11
+Imagem
+kuma — 18/05/2025 17:17
+https://pucpredu-my.sharepoint.com/:w:/r/personal/szlachta_henrique_pucpr_edu_br/_layouts/15/Doc.aspx?sourcedoc=%7B4BFA5249-F439-4682-8E88-FC85D5E94CC4%7D&file=BES-Especificação%20do%20Projeto%20-%20cali%20burger.docx&action=default&mobileredirect=true&wdOrigin=MARKETING.WORD.SIGNIN%2CAPPHOME-WEB.FILEBROWSER.RECENT&wdPreviousSession=48effe42-4bd5-4d66-bb24-05a8ecd6491a&wdPreviousSessionSrc=AppHomeWeb&ct=1747599036884
+Henrique_CSZ — 18/05/2025 18:15
+Imagem
+Imagem
+Henrique_CSZ — 18/05/2025 18:45
+CREATE DATABASE db_caliburger;
+USE db_caliburger;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+Expandir
+novoDB.txt
+10 KB
+αdnαn — 25/05/2025 18:42
+voltando ao cali burger, gere uma imagem do "cali nuggets" no mesmo estilo da imagem do cali classico que esta anexada
+Imagem
+Imagem
+Imagem
+Imagem
+αdnαn — 25/05/2025 19:25
+INSERT INTO pedido (numero_do_pedido, valor, nome_cliente, aceito, status, data_pedido)
+VALUES (UUID(), 15.00, 'Cliente Teste 1', 0, 'Aguardando aceitação', NOW());
+
+INSERT INTO itens_pedido (numero_do_pedido, produto, quantidade, observacao)
+VALUES 
+  ((SELECT numero_do_pedido FROM pedido WHERE nome_cliente = 'Cliente Teste 1' ORDER BY data_pedido DESC LIMIT 1), 'Cali Classico', 1, '');
+
+
+INSERT INTO pedido (numero_do_pedido, valor, nome_cliente, aceito, status, data_pedido)
+VALUES (UUID(), 38.00, 'Cliente Teste 2', 0, 'Aguardando aceitação', NOW());
+
+INSERT INTO itens_pedido (numero_do_pedido, produto, quantidade, observacao)
+VALUES 
+  ((SELECT numero_do_pedido FROM pedido WHERE nome_cliente = 'Cliente Teste 2' ORDER BY data_pedido DESC LIMIT 1), 'Cali Duplo', 1, ''),
+  ((SELECT numero_do_pedido FROM pedido WHERE nome_cliente = 'Cliente Teste 2' ORDER BY data_pedido DESC LIMIT 1), 'X Burger', 1, ''); 
+Arrebatador de Negro — 25/05/2025 19:48
+21199625027
+Henrique_CSZ — 25/05/2025 20:15
+https://drive.google.com/file/d/1s5ecKHv6bu9mHaNMHRWiPe873T4z5V5b/view?usp=sharing
+Google Docs
+Diagrama de atividades caliburger.drawio
+Imagem
+αdnαn — 27/05/2025 14:38
+// Pino conectado ao buzzer passivo
+const int buzzerPin = 19;
+
+void setup() {
+  // Configura o pino como saída
+  pinMode(buzzerPin, OUTPUT);
+
+  // Toca um som (nota de 1000 Hz por 500 ms)
+  tone(buzzerPin, 1000, 500);
+
+  // Espera 1 segundo
+  delay(1000);
+
+  // Toca outra nota (1500 Hz por 500 ms)
+  tone(buzzerPin, 1500, 500);
+
+  // Espera mais um pouco
+  delay(1000);
+}
+
+void loop() {
+  // Toca uma sequência simples de notas (melodia)
+  tone(buzzerPin, 262); // Dó
+  delay(300);
+  tone(buzzerPin, 294); // Ré
+  delay(300);
+  tone(buzzerPin, 330); // Mi
+  delay(300);
+  tone(buzzerPin, 349); // Fá
+  delay(300);
+  noTone(buzzerPin);    // Para o som
+  delay(1000);
+}
+codigo som buzzer
+kuma — 27/05/2025 14:43
+código sensor magnetico
+
+#define SENSOR_PIN 23
+
+
+int ultimoEstado = HIGH;  // Começa assumindo que está fechado
+
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(SENSOR_PIN, INPUT_PULLUP);
+}
+
+
+void loop() {
+  int estado = digitalRead(SENSOR_PIN);
+
+
+  if (estado != ultimoEstado) {  // Se o estado mudou
+    if (estado == LOW) {
+      Serial.println("Caixa fechada!");
+    } else {
+      Serial.println("Caixa aberta!");
+    }
+    ultimoEstado = estado;  // Atualiza o último estado
+  }
+
+
+  delay(50); // Pequeno delay para evitar ruído (debounce)
+}
+αdnαn — 27/05/2025 15:09
+#define SENSOR_PIN 23    // Pino do sensor (botão, interruptor, etc)
+const int buzzerPin = 19;  // Pino do buzzer passivo
+
+int ultimoEstado = HIGH;  // Assume que começa fechado (sensor com pull-up)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(SENSOR_PIN, INPUT_PULLUP);
+  pinMode(buzzerPin, OUTPUT);
+}
+
+void loop() {
+  int estado = digitalRead(SENSOR_PIN);
+
+  if (estado != ultimoEstado) {  // Detecta mudança de estado
+    if (estado == LOW) {
+      Serial.println("Caixa fechada!");
+    } else {
+      Serial.println("Caixa aberta!");
+      noTone(buzzerPin);  // Para o buzzer se abrir a caixa
+    }
+    ultimoEstado = estado;
+  }
+
+  if (estado == LOW) {
+    // Caixa está fechada — toca a sequência
+    tone(buzzerPin, 262); // Dó
+    delay(300);
+    tone(buzzerPin, 294); // Ré
+    delay(300);
+    tone(buzzerPin, 330); // Mi
+    delay(300);
+    tone(buzzerPin, 349); // Fá
+    delay(300);
+    noTone(buzzerPin);
+    delay(1000);
+  } else {
+    // Caixa aberta — garante buzzer desligado
+    noTone(buzzerPin);
+    delay(50);  // Pequeno delay para evitar uso excessivo de CPU
+  }
+}
+αdnαn — 27/05/2025 15:09
+sensor e buzzer
+αdnαn — 27/05/2025 15:43
+site com web teste rodando
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+
+const char* ssid = "VIVOFIBRA-7AA1";
+const char* password = "Dd13492131";
+Expandir
+message.txt
+4 KB
+kuma — 27/05/2025 20:22
+Imagem
+kuma — 27/05/2025 21:42
+McDonald's encerra experimento de IA no drive-thru após falhas
+McDonald's enfrentou problemas após implementar IA para receber pedidos no drive-thru — Foto: Divulgação/McDonald's
+McDonald's enfrentou problemas após implementar IA para receber pedidos no drive-thru — Foto: Divulgação/McDonald's
+Uma das principais redes de fast-food do mundo, o McDonald's já enfrentou problemas ao implementar a IA no serviço de drive-thru. Ao longo de três anos, a rede fez um teste junto com a empresa de tecnologia IBM (International Business Machines Corporation) para fazer com que a inteligência artificial recebesse os pedidos dos clientes em mais de 100 drive-thrus nos Estados Unidos.
+
+Entretanto, o McDonald's decidiu encerrar os testes em junho de 2024. Isso porque a IA mostrou diversas falhas e dificuldades para entender os pedidos, o que gerou uma série de clientes frustrados com a interação. Inclusive, um post do TikTok viralizou ao mostrar duas pessoas tentando fazer com a que inteligência artificial parasse de adicionar mais nuggets ao pedido - que acabou com o total de 260 nuggets.
+https://www.techtudo.com.br/listas/2025/03/5-polemicas-envolvendo-inteligencia-artificial-que-voce-precisa-saber-edsoftwares.ghtml
+TechTudo
+5 polêmicas envolvendo inteligência artificial que você precisa ...
+Embora sejam úteis para diversas tarefas, as ferramentas de inteligência artificial também cometem erros e se envolvem em polêmicas; confira alguns desafios do uso de IA
+5 polêmicas envolvendo inteligência artificial que você precisa ...
+kuma — 01/06/2025 04:58
+Quando realiza o cadastro, a aplicação faz confirmação de senha.
+falta implementar
+kuma — 01/06/2025 20:35
+https://pucpredu-my.sharepoint.com/:x:/r/personal/adnan_charif_pucpr_edu_br/_layouts/15/Doc.aspx?sourcedoc=%7B6CA170CA-BE01-4BCC-A5C9-7B18211BDAD9%7D&file=Defesa%20Sprint%202%20-%202025_v2.xlsx&action=default&mobileredirect=true
+kuma — 01/06/2025 20:43
+Tipo de arquivo em anexo: spreadsheet
+Defesa Sprint 2 - 2025_v2.xlsx
+20.50 KB
+Tipo de arquivo em anexo: acrobat
+CaliBurger Sprint 2.pdf
+936.66 KB
+Arrebatador de Negro — 19:13
+O setup() e handleSetTime() estão duplicados.
+
+No seu código HTML, você já criou uma interface para gerenciar múltiplos remédios, mas no código do ESP você só trata um único horário de alarme (horarioProgramado), ou seja, não está integrado com a lógica de múltiplos horários.
+
+O tratamento de arquivos CSS via SPIFFS está incompleto, pois você não inicializou o SPIFFS.
+
+Você criou rotas /main.html e /nav.html, mas o fetch no HTML está buscando nav.html diretamente. Está OK, mas a interface não está configurada para enviar ou salvar os remédios dinamicamente no ESP (só no front-end).
+Arrebatador de Negro — 19:38
+Tipo de arquivo em anexo: archive
+Códigos PHP.zip
+588.52 KB
+kuma — 19:49
+https://www.youtube.com/watch?v=QFor1veBPus&t=1884s
+YouTube
+FunBots
+ESP32 com WEBSERVER: Aprenda a Receber e Enviar Comandos via WEB!
+Imagem
+#include <ArduinoJson.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+#include "SPIFFS.h"
+#include <vector>
+Expandir
+message.txt
+7 KB
+αdnαn — 20:56
+https://youtu.be/B9ZEgvtEmOY?si=4yg86lVSxf8S96jh
+YouTube
+Fabio Bettio
+ESP32 como Server HTML
+Imagem
+αdnαn — 21:07
+https://youtu.be/PVTPtvCs0-4?si=xwILKbxWLmhPBTyz
+YouTube
+Fabio Bettio
+Apenas para HOMENS próximos dos 40 anos ou mais.
+Imagem
+Arrebatador de Negro — 21:55
+const char* main_html = R"rawliteral(
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Remédios</title>
+Expandir
+message.txt
+8 KB
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+15 KB
+Arrebatador de Negro — 22:02
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+18 KB
+kuma — 22:09
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+7 KB
+αdnαn — 22:13
+novo html web
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Remédios</title>
+    <link rel="stylesheet" href="style.css">
+Expandir
+message.txt
+14 KB
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Remédios</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        #error-message {
+            font-weight: bold;
+        }
+        .content {
+            width: 100vw;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 2rem;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            box-sizing: border-box;
+        }
+        body, html {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        .medicines-container, .log-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            padding: 1rem 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .medicines-container {
+            max-width: 600px;
+        }
+        .log-container {
+            max-width: 500px;
+            background-color: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .log-container h2 {
+            margin: 0 0 1rem 0;
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        button.add-remedio {
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button.add-remedio:hover {
+            background-color: #2980b9;
+        }
+        section {
+            margin-bottom: 1.5rem;
+        }
+        form label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #34495e;
+        }
+        form input[type="text"],
+        form input[type="time"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        form button {
+... (261 linhas)
+Recolher
+message.txt
+14 KB
+Arrebatador de Negro — 22:26
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+21 KB
+Henrique_CSZ — 22:30
+document.getElementById('novo-remedio-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const nome = document.getElementById('nome-remedio').value;
+    const horario = document.getElementById('horario-remedio').value;
+
+    if (nome && horario) {
+        fetch('/medicines', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nome: nome,
+                horarios: [horario]
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Remédio adicionado com sucesso!");
+                location.reload(); // atualiza a página para refletir os novos dados
+            } else {
+                alert("Erro ao adicionar remédio.");
+            }
+        });
+    }
+});
+Arrebatador de Negro — 22:36
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+15 KB
+#include <ArduinoJson.h>
+#include <ArduinoJson.hpp>
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+22 KB
+Henrique_CSZ — 22:40
+<script>
+    let remedios = [];
+
+    function renderRemedios() {
+        const lista = document.getElementById('lista-remedios');
+        lista.innerHTML = '';
+Expandir
+message.txt
+5 KB
+αdnαn — 22:57
+// ESP32 Medicine Box Arduino Sketch
+// Implements medicine management with JSON persistence, buzzer control, ESP box state, and logging
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WebServer.h>
+Expandir
+message.txt
+5 KB
+// ESP32 Medicine Box Arduino Sketch
+// Implements medicine management with JSON persistence, buzzer control, ESP box state, and logging
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WebServer.h>
+Expandir
+message.txt
+15 KB
+Henrique_CSZ — 23:06
+if (abs(agora - h) <= 1 && !alarmeDesativadoAposAbrir)
+αdnαn — 23:11
+// ESP32 Medicine Box Arduino Sketch
+// Implements medicine management with JSON persistence, buzzer control, ESP box state, and logging
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include "time.h"
+Expandir
+message.txt
+20 KB
+﻿
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Remédios</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        #error-message {
+            font-weight: bold;
+        }
+        .content {
+            width: 100vw;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 2rem;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            box-sizing: border-box;
+        }
+        body, html {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        .medicines-container, .log-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            padding: 1rem 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .medicines-container {
+            max-width: 600px;
+        }
+        .log-container {
+            max-width: 500px;
+            background-color: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .log-container h2 {
+            margin: 0 0 1rem 0;
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        button.add-remedio {
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button.add-remedio:hover {
+            background-color: #2980b9;
+        }
+        section {
+            margin-bottom: 1.5rem;
+        }
+        form label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #34495e;
+        }
+        form input[type="text"],
+        form input[type="time"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        form button {
+            background-color: #27ae60;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        form button:hover {
+            background-color: #1e8449;
+        }
+        form button#cancelar-adicionar,
+        form button#cancelar-editar {
+            background-color: #e74c3c;
+        }
+        form button#cancelar-adicionar:hover,
+        form button#cancelar-editar:hover {
+            background-color: #c0392b;
+        }
+        .lista-remedios .remedio {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ecf0f1;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .lista-remedios .remedio .info {
+            flex-grow: 1;
+            margin-left: 1rem;
+        }
+        .lista-remedios .remedio strong {
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        .lista-remedios .remedio p {
+            margin: 0.2rem 0 0 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .lista-remedios .remedio button.excluir {
+            background-color: #e74c3c;
+            border: none;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .lista-remedios .remedio button.excluir:hover {
+            background-color: #c0392b;
+        }
+        #confirm-excluir {
+            border-radius: 8px;
+            text-align: center;
+        }
+        #confirm-excluir p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        #confirm-excluir button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin: 0 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        #confirmar-excluir {
+            background-color: #27ae60;
+            color: white;
+        }
+        #confirmar-excluir:hover {
+            background-color: #1e8449;
+        }
+        #cancelar-excluir {
+            background-color: #e74c3c;
+            color: white;
+        }
+        #cancelar-excluir:hover {
+            background-color: #c0392b;
+        }
+        .log-messages {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            background-color: #dfe6e9;
+            padding: 1rem;
+            border-radius: 6px;
+            height: 100%;
+            overflow-y: auto;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div id="error-message" style="display:none; position: fixed; top: 0; left: 0; right: 0; background-color: #f8d7da; color: #721c24; padding: 1em; border-bottom: 2px solid #f5c6cb; text-align: center; z-index: 1000;"></div>
+
+    <main class="content">
+        <div class="medicines-container">
+            <header class="header">
+                <h1>Meus remédios</h1>
+                <button class="add-remedio">📅 Adicionar novo remédio</button>
+            </header>
+
+            <section id="form-adicionar-remedio" style="display:none; padding: 1em; border: 1px solid #ccc; margin: 1em 0;">
+                <h2>Adicionar novo remédio</h2>
+                <form id="novo-remedio-form" method="POST" action="#">
+                    <input type="hidden" name="acao" value="adicionar">
+                    <label for="nome-remedio">Nome do remédio:</label><br>
+                    <input type="text" id="nome-remedio" name="nome-remedio" required><br><br>
+                    <label for="horario-remedio">Horário:</label><br>
+                    <input type="time" id="horario-remedio" name="horario-remedio" required><br><br>
+                    <button type="submit">Adicionar</button>
+                    <button type="button" id="cancelar-adicionar">Cancelar</button>
+                </form>
+            </section>
+
+            <section id="form-editar-remedio" style="display:none; padding: 1em; border: 1px solid #ccc; margin: 1em 0;">
+                <h2>Editar remédio</h2>
+                <form id="editar-remedio-form" method="POST" action="#">
+                    <input type="hidden" name="acao" value="editar">
+                    <input type="hidden" id="id-medicamento" name="id-medicamento" value="">
+                    <label for="nome-remedio-editar">Nome do remédio:</label><br>
+                    <input type="text" id="nome-remedio-editar" name="nome-remedio-editar" required><br><br>
+                    <label for="horario-remedio-editar">Horário:</label><br>
+                    <input type="time" id="horario-remedio-editar" name="horario-remedio-editar" required><br><br>
+                    <button type="submit">Confirmar</button>
+                    <button type="button" id="cancelar-editar">Cancelar</button>
+                </form>
+            </section>
+
+            <section class="lista-remedios" id="lista-remedios">
+                <!-- Medicine list will be populated here -->
+            </section>
+        </div>
+
+        <div class="log-container">
+            <h2>Log</h2>
+            <div class="log-messages">
+22:06:48: Caixa Fechada
+22:08:00: Hora de tomar remedio
+22:08:53: Remedio tomado
+            </div>
+        </div>
+    </main>
+
+    <div id="confirm-excluir" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: white; border: 1px solid #ccc; padding: 1em; z-index: 2000; box-shadow: 0 0 10px rgba(0,0,0,0.5); border-radius: 8px; text-align: center;">
+        <p>Deseja realmente excluir este remédio?</p>
+        <button id="confirmar-excluir">Confirmar</button>
+        <button id="cancelar-excluir">Cancelar</button>
+    </div>
+
+    <script>
+        // Simulated data (replace with real data or API calls if available)
+        let remedios = [
+            {id: 1, nome: "Remédio A", horario: "08:00, 20:00"},
+            {id: 2, nome: "Remédio B", horario: "12:00"}
+        ];
+
+        function renderRemedios() {
+            const lista = document.getElementById('lista-remedios');
+            lista.innerHTML = '';
+            remedios.forEach(remedio => {
+                const div = document.createElement('div');
+                div.className = 'remedio';
+                div.setAttribute('data-id', remedio.id);
+                div.setAttribute('data-nome', remedio.nome);
+                div.setAttribute('data-horario', remedio.horario);
+
+                div.innerHTML = `
+                    <div class="icon-placeholder"></div>
+                    <div class="info">
+                        <strong>${remedio.nome}</strong>
+                        <p>Horários: ${remedio.horario}</p>
+                    </div>
+                    <button class="excluir">Excluir</button>
+                `;
+                lista.appendChild(div);
+            });
+            attachEventListeners();
+        }
+
+        function attachEventListeners() {
+            let remedioToDeleteId = null;
+            document.querySelectorAll('.excluir').forEach(button => {
+                button.addEventListener('click', function() {
+                    const remedioDiv = this.closest('.remedio');
+                    remedioToDeleteId = remedioDiv.getAttribute('data-id');
+                    document.getElementById('confirm-excluir').style.display = 'block';
+                });
+            });
+
+            document.getElementById('cancelar-excluir').addEventListener('click', function() {
+                remedioToDeleteId = null;
+                document.getElementById('confirm-excluir').style.display = 'none';
+            });
+
+            document.getElementById('confirmar-excluir').addEventListener('click', function() {
+                if (remedioToDeleteId) {
+                    remedios = remedios.filter(r => r.id != remedioToDeleteId);
+                    renderRemedios();
+                    remedioToDeleteId = null;
+                    document.getElementById('confirm-excluir').style.display = 'none';
+                }
+            });
+        }
+
+        document.querySelector('.add-remedio').addEventListener('click', function() {
+            document.getElementById('form-adicionar-remedio').style.display = 'block';
+        });
+
+        document.getElementById('cancelar-adicionar').addEventListener('click', function() {
+            document.getElementById('form-adicionar-remedio').style.display = 'none';
+        });
+
+        document.getElementById('cancelar-editar').addEventListener('click', function() {
+            document.getElementById('form-editar-remedio').style.display = 'none';
+        });
+
+        document.getElementById('novo-remedio-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nome = document.getElementById('nome-remedio').value;
+            const horario = document.getElementById('horario-remedio').value;
+            if (nome && horario) {
+                const newId = remedios.length ? Math.max(...remedios.map(r => r.id)) + 1 : 1;
+                remedios.push({id: newId, nome: nome, horario: horario});
+                renderRemedios();
+                document.getElementById('form-adicionar-remedio').style.display = 'none';
+                this.reset();
+            }
+        });
+
+        document.getElementById('editar-remedio-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const id = parseInt(document.getElementById('id-medicamento').value);
+            const nome = document.getElementById('nome-remedio-editar').value;
+            const horario = document.getElementById('horario-remedio-editar').value;
+            const remedio = remedios.find(r => r.id === id);
+            if (remedio && nome && horario) {
+                remedio.nome = nome;
+                remedio.horario = horario;
+                renderRemedios();
+                document.getElementById('form-editar-remedio').style.display = 'none';
+            }
+        });
+
+        // Initial render
+        renderRemedios();
+    </script>
+</body>
+</html>
