@@ -28,7 +28,8 @@ std::vector<Medicine> medicines;
 std::vector<String> logMessages; // vetor para armazenar mensagens do log
 
 bool alarmeTocando = false;
-bool alarmeDesativadoAposAbrir = false;
+bool alarmeAtivoNoHorario = false; // Indicates if alarm is active at current schedule time
+bool caixaAberta = false; // indica se a caixa está aberta ou fechada
 int lastAlarmTime = -1; // Track last alarm time that triggered buzzer
 
 const char* ntpServer = "pool.ntp.org";
@@ -508,65 +509,82 @@ void carregarMedicines() {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Função para controlar leitura do sensor e mudança do estado
+// Atualiza o estado do sensor (caixa aberta/fechada)
 void checkSensorState() {
   int estadoAtual = digitalRead(SENSOR_PIN);
   if (estadoAtual != ultimoEstado) {
     if (estadoAtual == LOW) {
       addLogMessage("Caixa fechada!");
-      // Ao fechar caixa, não reinicia alarme ou lastAlarmTime
+      caixaAberta = false; // marca caixa fechada
     } else {
       addLogMessage("Caixa aberta!");
       if (alarmeTocando) {
         noTone(buzzerPin);
-        alarmeTocando = false;
-        alarmeDesativadoAposAbrir = true;  // Marca que alarme foi desativado após abrir
-        lastAlarmTime = -1;
+        alarmeTocando = false; // para o alarme imediatamente
         addLogMessage("Alarme desativado após abrir a caixa.");
       }
+      caixaAberta = true;  // marca caixa aberta
     }
     ultimoEstado = estadoAtual;
   }
 }
 
-// Função para verificar os horários e ativar/desativar buzzer corretamente
-void checkAlarms(struct tm &timeinfo) {
-  if (alarmeDesativadoAposAbrir) {
-    // Se o alarme foi desativado após abrir, só pode tocar novamente após fechar e novo horário
-    if (digitalRead(SENSOR_PIN) == LOW) {
-      // Caixa fechada, mas não ativa alarme até próximo horário diferente do lastAlarmTime
-      // Só reseta ao abrir a caixa (feito no checkSensorState)
-      return;
-    } else {
-      // Caixa aberta, alarme já desativado, nada a fazer
-      return;
-    }
+// Função para verificar horários e controlar alarme conforme estado da caixa e horário
+void controlarAlarme() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    return; // Não tem hora atual, não processa
   }
 
   int agora = timeinfo.tm_hour * 60 + timeinfo.tm_min;
-  bool horarioAtivo = false;
 
-  for (const auto& med : medicines) {
+  // Se a caixa estiver aberta, não toca o alarme
+  if (caixaAberta) {
+    if (alarmeTocando) {
+      noTone(buzzerPin);
+      alarmeTocando = false; // Para o alarme se estiver tocando
+      addLogMessage("Alarme parado pois a caixa está aberta.");
+    }
+    return; // Sai da função se a caixa estiver aberta
+  }
+
+  // Verifica se o horário atual ativa alarme
+  bool horarioAtivoAgora = false;
+  int horarioAtual = -1;
+
+  // Substitua auto por Medicine para evitar problemas de compilação
+  for (std::vector<Medicine>::iterator it = medicines.begin(); it != medicines.end(); ++it) {
+    Medicine& med = *it; // Referência ao medicamento
     for (int h : med.horarios) {
       if (agora == h) {
-        horarioAtivo = true;
-        if (!alarmeTocando && lastAlarmTime != h && digitalRead(SENSOR_PIN) == LOW) {
-          tone(buzzerPin, 1000);
-          alarmeTocando = true;
-          lastAlarmTime = h;
-          addLogMessage("Alarme tocando para horário: " + String(h / 60) + ":" + String(h % 60));
-          return;
-        }
+        horarioAtivoAgora = true;
+        horarioAtual = h;
+        break;
       }
     }
+    if (horarioAtivoAgora) break; // Sai do loop se encontrou o horário
   }
 
-  if (!horarioAtivo && alarmeTocando) {
-    noTone(buzzerPin);
-    alarmeTocando = false;
-    lastAlarmTime = -1;
-    addLogMessage("Alarme parado pois horário não está ativo.");
-  }
+  if (horarioAtivoAgora) {
+    // Se alarme ainda não foi ativado para esse horário e caixa fechada, liga buzzer
+    if (lastAlarmTime != horarioAtual) { // Só toca se ainda não tocou para esse horário
+      tone(buzzerPin, 1000);
+      alarmeTocando = true;
+      alarmeAtivoNoHorario = true;
+      lastAlarmTime = horarioAtual;
+      addLogMessage("Alarme tocando para horário: " + String(horarioAtual / 60) + ":" + String(horarioAtual % 60));
+    }
+  } else {
+  // Fora do horário programado, desliga buzzer se estiver tocando
+      if (alarmeTocando) {
+        noTone(buzzerPin);
+        alarmeTocando = false;
+        addLogMessage("Alarme parado pois horário não está ativo.");
+      }
+
+      // Você pode manter a flag aqui se quiser, mas o mais importante é manter o controle pelo lastAlarmTime
+      alarmeAtivoNoHorario = false;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -702,9 +720,7 @@ void loop() {
 
   checkSensorState();
 
-  struct tm timeinfo;
-  if (getLocalTime(&timeinfo)) {
-    checkAlarms(timeinfo);
-  }
+  controlarAlarme();
+
   delay(100);
 }
