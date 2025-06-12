@@ -29,6 +29,7 @@ std::vector<String> logMessages; // vetor para armazenar mensagens do log
 
 bool alarmeTocando = false;
 bool alarmeDesativadoAposAbrir = false;
+int lastAlarmTime = -1; // Track last alarm time that triggered buzzer
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = -3 * 3600;
@@ -337,11 +338,26 @@ const char* main_html = R"rawliteral(
 
           document.getElementById('confirmar-excluir').addEventListener('click', function() {
               if (remedioToDeleteId) {
-                  // Opcional: implementar DELETE via fetch aqui
-                  remedios = remedios.filter(r => r.id != remedioToDeleteId);
-                  renderRemedios();
-                  remedioToDeleteId = null;
-                  document.getElementById('confirm-excluir').style.display = 'none';
+                  fetch('/medicines', {
+                      method: 'DELETE',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ id: parseInt(remedioToDeleteId) })
+                  })
+                  .then(response => {
+                      if (response.ok) {
+                          remedios = remedios.filter(r => r.id != remedioToDeleteId);
+                          renderRemedios();
+                          remedioToDeleteId = null;
+                          document.getElementById('confirm-excluir').style.display = 'none';
+                      } else {
+                          alert("Erro ao excluir remédio.");
+                      }
+                  })
+                  .catch(() => {
+                      alert("Erro de rede ao excluir remédio.");
+                  });
               }
           });
       }
@@ -426,10 +442,11 @@ const char* main_html = R"rawliteral(
 </html>
 )rawliteral";
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// Funções de persistência e log
 void addLogMessage(const String& message) {
   logMessages.push_back(message);
   Serial.println(message);
-  // Limitar tamanho máximo do vetor (exemplo 100 entradas)
   if (logMessages.size() > 100) {
     logMessages.erase(logMessages.begin());
   }
@@ -438,7 +455,7 @@ void addLogMessage(const String& message) {
 void salvarMedicines() {
   DynamicJsonDocument doc(2048);
   JsonArray arr = doc.to<JsonArray>();
-  for (auto &med : medicines) {
+  for (const auto &med : medicines) {
     JsonObject obj = arr.createNestedObject();
     obj["id"] = med.id;
     obj["nome"] = med.nome;
@@ -488,6 +505,71 @@ void carregarMedicines() {
   }
   addLogMessage("Medicines carregados!");
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Função para controlar leitura do sensor e mudança do estado
+void checkSensorState() {
+  int estadoAtual = digitalRead(SENSOR_PIN);
+  if (estadoAtual != ultimoEstado) {
+    if (estadoAtual == LOW) {
+      addLogMessage("Caixa fechada!");
+      // Ao fechar caixa, não reinicia alarme ou lastAlarmTime
+    } else {
+      addLogMessage("Caixa aberta!");
+      if (alarmeTocando) {
+        noTone(buzzerPin);
+        alarmeTocando = false;
+        alarmeDesativadoAposAbrir = true;  // Marca que alarme foi desativado após abrir
+        lastAlarmTime = -1;
+        addLogMessage("Alarme desativado após abrir a caixa.");
+      }
+    }
+    ultimoEstado = estadoAtual;
+  }
+}
+
+// Função para verificar os horários e ativar/desativar buzzer corretamente
+void checkAlarms(struct tm &timeinfo) {
+  if (alarmeDesativadoAposAbrir) {
+    // Se o alarme foi desativado após abrir, só pode tocar novamente após fechar e novo horário
+    if (digitalRead(SENSOR_PIN) == LOW) {
+      // Caixa fechada, mas não ativa alarme até próximo horário diferente do lastAlarmTime
+      // Só reseta ao abrir a caixa (feito no checkSensorState)
+      return;
+    } else {
+      // Caixa aberta, alarme já desativado, nada a fazer
+      return;
+    }
+  }
+
+  int agora = timeinfo.tm_hour * 60 + timeinfo.tm_min;
+  bool horarioAtivo = false;
+
+  for (const auto& med : medicines) {
+    for (int h : med.horarios) {
+      if (agora == h) {
+        horarioAtivo = true;
+        if (!alarmeTocando && lastAlarmTime != h && digitalRead(SENSOR_PIN) == LOW) {
+          tone(buzzerPin, 1000);
+          alarmeTocando = true;
+          lastAlarmTime = h;
+          addLogMessage("Alarme tocando para horário: " + String(h / 60) + ":" + String(h % 60));
+          return;
+        }
+      }
+    }
+  }
+
+  if (!horarioAtivo && alarmeTocando) {
+    noTone(buzzerPin);
+    alarmeTocando = false;
+    lastAlarmTime = -1;
+    addLogMessage("Alarme parado pois horário não está ativo.");
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   Serial.begin(115200);
@@ -580,7 +662,26 @@ void setup() {
     server.send(200, "text/plain", "Medicine added");
   });
 
-  // Endpoint para enviar as mensagens do log para o frontend
+  server.on("/medicines", HTTP_DELETE, []() {
+    if (!server.hasArg("plain")) {
+      server.send(400, "text/plain", "Body not received");
+      return;
+    }
+    String body = server.arg("plain");
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, body);
+    if (error) {
+      server.send(400, "text/plain", "Invalid JSON");
+      return;
+    }
+    int idToDelete = doc["id"];
+    medicines.erase(std::remove_if(medicines.begin(), medicines.end(), [idToDelete](const Medicine& med) {
+      return med.id == idToDelete;
+    }), medicines.end());
+    salvarMedicines();
+    server.send(200, "text/plain", "Medicine deleted");
+  });
+
   server.on("/log", HTTP_GET, []() {
     DynamicJsonDocument doc(2048);
     JsonArray arr = doc.to<JsonArray>();
@@ -593,53 +694,17 @@ void setup() {
   });
 
   server.begin();
-  addLogMessage("Servidor iniciado");
+  addLogMessage("Servidor iniciado na porta 80");
 }
 
 void loop() {
   server.handleClient();
 
-  int estado = digitalRead(SENSOR_PIN);
-  if (estado != ultimoEstado) {
-    if (estado == LOW) {
-      addLogMessage("Caixa fechada!");
-    } else {
-      addLogMessage("Caixa aberta!");
-      if (alarmeTocando) {
-        noTone(buzzerPin);
-        alarmeTocando = false;
-        alarmeDesativadoAposAbrir = true;
-        addLogMessage("Alarme desativado apos abrir a caixa.");
-      }
-    }
-    ultimoEstado = estado;
-  }
+  checkSensorState();
 
-  if (!medicines.empty()) {
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
-      int agora = timeinfo.tm_hour * 60 + timeinfo.tm_min;
-      bool alarmTriggered = false;
-      for (const auto& med : medicines) {
-        for (int h : med.horarios) {
-          if (agora == h && !alarmeDesativadoAposAbrir) {
-            if (estado == LOW && !alarmeTocando) {
-              tone(buzzerPin, 1000);
-              alarmeTocando = true;
-              addLogMessage("Alarme tocando.");
-              alarmTriggered = true;
-              break;
-            }
-          }
-        }
-        if (alarmTriggered) break;
-      }
-      if (!alarmTriggered && alarmeTocando) {
-        noTone(buzzerPin);
-        alarmeTocando = false;
-      }
-    }
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo)) {
+    checkAlarms(timeinfo);
   }
-
   delay(100);
 }
