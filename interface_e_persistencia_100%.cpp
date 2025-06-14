@@ -504,7 +504,7 @@ void carregarMedicines() {
     }
     medicines.push_back(med);
   }
-  addLogMessage("Medicines carregados!");
+  addLogMessage("Remédios carregados!");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
