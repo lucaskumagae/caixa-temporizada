@@ -472,7 +472,7 @@ void salvarMedicines() {
   }
   serializeJson(doc, file);
   file.close();
-  addLogMessage("Medicines salvos!");
+  addLogMessage("Remédios salvos!");
 }
 
 void carregarMedicines() {
